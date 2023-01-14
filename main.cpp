@@ -28,6 +28,31 @@ void PrintBitstring(int input)
 	std::cout << input << ":	" << output << std::endl;
 }
 
+void RemoveDups(char *str)
+{
+	uint32_t cursor1 = 0;
+	uint32_t cursor2 = 0;
+
+	while((str[cursor1] != '\0') && (str[cursor1] != str[++cursor1]))
+	{
+
+	}
+
+	cursor2 = cursor1 - 1;
+
+	while(str[cursor1] != '\0')
+	{
+		cursor1++;
+
+		if(str[cursor1] != str[cursor2])
+		{
+			cursor2++;
+			
+			str[cursor2] = str[cursor1];
+		}
+	}
+}
+
 int main(int argc, const char* argv[])
 {
 	std::cout << "Task 1" << std::endl;
@@ -41,6 +66,15 @@ int main(int argc, const char* argv[])
 	PrintBitstring(-23358);
 	PrintBitstring(23358);
 
+	std::cout << "Task 2" << std::endl;
+
+	char test[] = "";
+	char data[] = "A B C C B A AAA  BB   CCC  AA CCCC  C B A";
+	
+	RemoveDups(test);
+	RemoveDups(data);
+
+	std::cout << data << std::endl;
 
 	return 0;
 }
