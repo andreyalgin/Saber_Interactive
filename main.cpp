@@ -10,6 +10,8 @@
 
 #include <unistd.h>
 
+//=========================== Task 1 =======================================
+
 void PrintBitstring(int input)
 {
 	size_t counter = sizeof(int)*8;
@@ -27,6 +29,8 @@ void PrintBitstring(int input)
 
 	std::cout << input << ":	" << output << std::endl;
 }
+
+//=========================== Task 2 =======================================
 
 void RemoveDups(char *str)
 {
@@ -53,8 +57,88 @@ void RemoveDups(char *str)
 	}
 }
 
+//=========================== Task 3 =======================================
+
+struct ListNode
+{
+	ListNode* prev;
+	ListNode* next;
+	ListNode* rand;
+	std::string data;
+};
+
+class List
+{
+public:
+	void Serialize(FILE* file)
+	{
+		ListNode* current = head;
+
+		rewind(file);
+
+		while(current != nullptr)
+		{
+			size_t size = current->data.size();
+
+			fwrite(&size, sizeof(size), 1, file);
+			fwrite(current->data.data(), size, 1, file);
+
+			current = current->next;
+		}
+
+		fflush(file);
+	}
+
+	void Deserialize(FILE* file)
+	{
+		rewind(file);
+
+		while(feof(file) == 0)
+		{
+			size_t size = 0;
+
+			fread(&size, sizeof(size), 1, file);
+
+			if(feof(file) != 0)
+			{
+				break;
+			}
+
+			char buffer[size];
+
+			fread(buffer, size, 1, file);
+
+			PushBack(new ListNode{nullptr, nullptr, nullptr, buffer});
+		}
+	}
+
+	void PushBack(ListNode* node)
+	{
+		if(tail != nullptr)
+		{
+			node->prev = tail;
+			tail->next = node;
+		}
+
+		if(head == nullptr)
+		{
+			head = node;
+		}
+
+		tail = node;
+		count++;
+	}
+
+private:
+	ListNode* head = nullptr;
+	ListNode* tail = nullptr;
+	int count = 0;
+};
+
+
 int main(int argc, const char* argv[])
 {
+	// Task 1
 	std::cout << "Task 1" << std::endl;
 	std::cout << "sizeof(int) " << sizeof(int)*8 << "-bits" << std::endl;
 
@@ -66,6 +150,7 @@ int main(int argc, const char* argv[])
 	PrintBitstring(-23358);
 	PrintBitstring(23358);
 
+	// Task 2
 	std::cout << "Task 2" << std::endl;
 
 	char test[] = "";
@@ -75,6 +160,55 @@ int main(int argc, const char* argv[])
 	RemoveDups(data);
 
 	std::cout << data << std::endl;
+
+	// Task 3
+	std::cout << "Task 3" << std::endl;
+
+	List list1;
+	List list2;
+	FILE *fp;
+
+	fp = fopen("task_3_list1.bin", "wb");
+	if(fp == NULL)
+	{
+		std::cout << "Can't open file" << std::endl;
+
+		exit(EXIT_FAILURE);
+	}
+
+	list1.PushBack(new ListNode{nullptr, nullptr, nullptr, "ABCDE"});
+	list1.PushBack(new ListNode{nullptr, nullptr, nullptr, "FGH"});
+	list1.PushBack(new ListNode{nullptr, nullptr, nullptr, "IJKLMNOPQRSTUVWXYZ"});
+
+	list1.Serialize(fp);
+
+	fclose(fp);
+
+	fp = fopen("task_3_list1.bin", "rb");
+	if(fp == NULL)
+	{
+		std::cout << "Can't open file" << std::endl;
+
+		exit(EXIT_FAILURE);
+	}
+
+	list2.Deserialize(fp);
+
+	fclose(fp);
+
+	fp = fopen("task_3_list2.bin", "wb");
+	if(fp == NULL)
+	{
+		std::cout << "Can't open file" << std::endl;
+
+		exit(EXIT_FAILURE);
+	}
+
+	list2.Serialize(fp);
+
+	fclose(fp);
+
+	std::cout << "task_3_list1.bin" << " " << "task_3_list2.bin" << std::endl;
 
 	return 0;
 }
