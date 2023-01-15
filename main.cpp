@@ -3,10 +3,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <csignal>
 #include <ctime>
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <unordered_map>
 
 #include <unistd.h>
 
@@ -50,7 +52,6 @@ void RemoveDups(char *str)
 		if(*cursor1 != *cursor2)
 		{
 			cursor2++;
-			
 			*cursor2 = *cursor1;
 		}
 	}
@@ -72,13 +73,18 @@ public:
 	void Serialize(FILE* file)
 	{
 		ListNode* current = head;
+		size_t count = map.size();
 
 		rewind(file);
 
+		fwrite(&count, sizeof(count), 1, file);
+
 		while(current != nullptr)
 		{
+			size_t rand = (current->rand != nullptr) ? map[current->rand] : 0xFFFFFFFFFFFFFFFF;
 			size_t size = current->data.size();
 
+			fwrite(&rand, sizeof(rand), 1, file);
 			fwrite(&size, sizeof(size), 1, file);
 			fwrite(current->data.data(), size, 1, file);
 
@@ -90,24 +96,49 @@ public:
 
 	void Deserialize(FILE* file)
 	{
+		size_t count = 0;
+
 		rewind(file);
 
-		while(feof(file) == 0)
+		fread(&count, sizeof(count), 1, file);
+
+		if(feof(file) != 0)
 		{
+			return;
+		}
+
+		ListNode* nodes[count];
+
+		for(ListNode* node : nodes)
+		{
+			size_t rand = 0;
 			size_t size = 0;
 
-			fread(&size, sizeof(size), 1, file);
-
-			if(feof(file) != 0)
+			if(node == nullptr)
 			{
-				break;
+				node = new ListNode();
 			}
+			
+			fread(&rand, sizeof(rand), 1, file);
+			fread(&size, sizeof(size), 1, file);
 
 			char buffer[size];
 
 			fread(buffer, size, 1, file);
 
-			PushBack(new ListNode{nullptr, nullptr, nullptr, buffer});
+			if(rand != 0xFFFFFFFFFFFFFFFF)
+			{
+				if(nodes[rand] == nullptr)
+				{
+					nodes[rand] = new ListNode();
+				}
+
+				node->rand = nodes[rand];
+			}
+
+			node->data = buffer;
+
+			PushBack(node);
 		}
 	}
 
@@ -125,15 +156,39 @@ public:
 		}
 
 		tail = node;
-		count++;
+
+		size_t count = map.size();
+		map[node] = count;
+	}
+
+	ListNode& operator[](size_t i)
+	{
+		ListNode* current = head;
+		size_t counter = 0;
+
+		while(current != nullptr)
+		{
+			if(i == counter)
+			{
+				return *current;
+			}
+
+			counter++;
+			current = current->next;
+		}
+
+		raise(SIGSEGV);
+
+		return *current;
 	}
 
 private:
 	ListNode* head = nullptr;
 	ListNode* tail = nullptr;
-	int count = 0;
+	std::unordered_map<ListNode*, size_t> map;
 };
 
+//=================================================================
 
 int main(int argc, const char* argv[])
 {
@@ -175,9 +230,15 @@ int main(int argc, const char* argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	list1.PushBack(new ListNode{nullptr, nullptr, nullptr, "ABCDE"});
-	list1.PushBack(new ListNode{nullptr, nullptr, nullptr, "FGH"});
-	list1.PushBack(new ListNode{nullptr, nullptr, nullptr, "IJKLMNOPQRSTUVWXYZ"});
+	ListNode* node1 = new ListNode{nullptr, nullptr, nullptr, "ABCDE"};
+	ListNode* node2 = new ListNode{nullptr, nullptr, nullptr, "FGH"};
+	ListNode* node3 = new ListNode{nullptr, nullptr, nullptr, "IJKLMNOPQRSTUVWXYZ"};
+
+	node1->rand = node3;
+
+	list1.PushBack(node1);
+	list1.PushBack(node2);
+	list1.PushBack(node3);
 
 	list1.Serialize(fp);
 
@@ -207,7 +268,9 @@ int main(int argc, const char* argv[])
 
 	fclose(fp);
 
-	std::cout << "task_3_list1.bin" << " " << "task_3_list2.bin" << std::endl;
+	std::cout << "task_3_list1.bin task_3_list2.bin" << std::endl;
+	std::cout << "list2[0].data " << list2[0].data << std::endl;
+	std::cout << "list2[0].rand->data " << list2[0].rand->data << std::endl;
 
 	return 0;
 }
