@@ -34,25 +34,24 @@ void PrintBitstring(int input)
 
 void RemoveDups(char *str)
 {
-	uint32_t cursor1 = 0;
-	uint32_t cursor2 = 0;
+	char *cursor1 = str;
+	char *cursor2 = str;
 
-	while((str[cursor1] != '\0') && (str[cursor1] != str[++cursor1]))
+	while((*cursor1 != '\0') && (*cursor1 != *(++cursor1)))
 	{
-
 	}
 
 	cursor2 = cursor1 - 1;
 
-	while(str[cursor1] != '\0')
+	while(*cursor1 != '\0')
 	{
 		cursor1++;
 
-		if(str[cursor1] != str[cursor2])
+		if(*cursor1 != *cursor2)
 		{
 			cursor2++;
 			
-			str[cursor2] = str[cursor1];
+			*cursor2 = *cursor1;
 		}
 	}
 }
