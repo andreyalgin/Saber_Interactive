@@ -12,6 +12,10 @@
 
 #include <unistd.h>
 
+// Author: Algin Andrey Vladimirovich (Альгин Андрей Владимирович)
+// Date: 16.01.2023
+// Elapsed time: 8 hours
+
 //=========================== Task 1 =======================================
 
 void PrintBitstring(int input)
