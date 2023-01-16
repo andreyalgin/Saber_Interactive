@@ -73,7 +73,9 @@ public:
 	void Serialize(FILE* file)
 	{
 		ListNode* current = head;
-		size_t count = map.size();
+		std::unordered_map<ListNode*, int> map;
+
+		Index(map);
 
 		rewind(file);
 
@@ -81,7 +83,7 @@ public:
 
 		while(current != nullptr)
 		{
-			size_t rand = (current->rand != nullptr) ? map[current->rand] : 0xFFFFFFFFFFFFFFFF;
+			int rand = map[current->rand];
 			size_t size = current->data.size();
 
 			fwrite(&rand, sizeof(rand), 1, file);
@@ -96,22 +98,22 @@ public:
 
 	void Deserialize(FILE* file)
 	{
-		size_t count = 0;
+		int nodeCount = 0;
 
 		rewind(file);
 
-		fread(&count, sizeof(count), 1, file);
+		fread(&nodeCount, sizeof(nodeCount), 1, file);
 
 		if(feof(file) != 0)
 		{
 			return;
 		}
 
-		ListNode* nodes[count];
+		ListNode* nodes[nodeCount];
 
 		for(ListNode* node : nodes)
 		{
-			size_t rand = 0;
+			int rand = 0;
 			size_t size = 0;
 
 			if(node == nullptr)
@@ -126,7 +128,7 @@ public:
 
 			fread(buffer, size, 1, file);
 
-			if(rand != 0xFFFFFFFFFFFFFFFF)
+			if(rand != -1)
 			{
 				if(nodes[rand] == nullptr)
 				{
@@ -157,8 +159,24 @@ public:
 
 		tail = node;
 
-		size_t count = map.size();
-		map[node] = count;
+		count++;
+	}
+
+	void Index(std::unordered_map<ListNode*, int>& map)
+	{
+		ListNode* current = head;
+		int counter = 0;
+
+		map.reserve(count + 1);
+		map[nullptr] = -1;
+
+		while(current != nullptr)
+		{
+			map[current] = counter;
+
+			counter++;
+			current = current->next;
+		}
 	}
 
 	ListNode& operator[](size_t i)
@@ -185,7 +203,7 @@ public:
 private:
 	ListNode* head = nullptr;
 	ListNode* tail = nullptr;
-	std::unordered_map<ListNode*, size_t> map;
+	int count = 0;
 };
 
 //=================================================================
